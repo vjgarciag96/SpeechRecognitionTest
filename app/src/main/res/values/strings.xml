@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">SpeechRecognitionTest</string>
+    <string name="say_something" />
+    <string name="input_something" />
+    <string name="yes" />
+    <string name="no">no</string>
+    <string name="speech_not_available">speech not available</string>
+    <string name="enable_google_voice_typing">enable google voice typing</string>
+    <string name="repeat">repeat</string>
+</resources>
