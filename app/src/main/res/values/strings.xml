@@ -7,4 +7,9 @@
     <string name="speech_not_available">speech not available</string>
     <string name="enable_google_voice_typing">enable google voice typing</string>
     <string name="repeat">repeat</string>
+    <string name="labelNumbField1">Introduce el valor numérico 1</string>
+    <string name="labelNumbField2">Introduce el valor numérico 2</string>
+    <string name="labelNumbField3">Introduce el valor numérico 3</string>
+    <string name="labelNumbField4">Introduce el valor numérico 4</string>
+    <string name="helloWorld">Hello World! Im testing speech recognition!!</string>
 </resources>

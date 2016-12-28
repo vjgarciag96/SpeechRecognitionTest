@@ -6,10 +6,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.Button;
+import android.view.View;
+import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 import net.gotev.speech.GoogleVoiceTypingDisabledException;
 import net.gotev.speech.Speech;
@@ -24,24 +23,33 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements SpeechDelegate{
 
+    //Para los permisos
     private static final int REQUEST_PERMISSION = 25;
+
+    //Elementos del diseño relacionados con el speechRecognition
     private ImageButton listenButton;
     private SpeechProgressView progress;
+
+    private EditText[] numFields;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         Speech.init(this);//Iniciar el recognizer
         Speech.getInstance().setLocale(new Locale("es", "ES"));//Cambiar idioma a español
 
-        listenButton=(ImageButton)findViewById(R.id.listen);
-        listenButton.setOnClickListener(view->onButtonClick());
+        numFields=new EditText[4];
+        numFields[0]=(EditText)findViewById(R.id.numField1);//La utilizaremos
+        numFields[1]=(EditText)findViewById(R.id.numField2);//para rellenarla según
+        numFields[2]=(EditText)findViewById(R.id.numField3);// lo escuchado
+        numFields[3]=(EditText)findViewById(R.id.numField4);
 
         progress = (SpeechProgressView) findViewById(R.id.progress);
     }
 
-    private void onButtonClick(){
+    public void onEditTextClick(View view){
         if (Speech.getInstance().isListening()) {
             Speech.getInstance().stopListening();
         } else {
@@ -49,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
                     new String[]{Manifest.permission.INTERNET, Manifest.permission.RECORD_AUDIO},
                     REQUEST_PERMISSION);
             try {
+                view.setFocusableInTouchMode(true);
+                view.requestFocus();
                 Speech.getInstance().stopTextToSpeech();
                 Speech.getInstance().startListening(progress, MainActivity.this);
 
@@ -120,6 +130,20 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
 
         } else {
             Speech.getInstance().say(result);
+            int i=0;
+            boolean setted=false;
+
+            while(i<numFields.length && !setted) {
+                if(numFields[i].isFocused()) {
+                    setted = true;
+                    numFields[i].setText(result);
+                    numFields[i].setFocusableInTouchMode(false);
+                    numFields[i].clearFocus();
+                }
+                else
+                    i++;
+            }
         }
     }
+
 }
