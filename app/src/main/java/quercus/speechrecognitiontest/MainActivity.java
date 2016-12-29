@@ -2,6 +2,7 @@ package quercus.speechrecognitiontest;
 
 import android.Manifest;
 import android.content.DialogInterface;
+import android.speech.SpeechRecognizer;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -9,12 +10,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Toast;
 
 import net.gotev.speech.GoogleVoiceTypingDisabledException;
 import net.gotev.speech.Speech;
 import net.gotev.speech.SpeechDelegate;
 import net.gotev.speech.SpeechRecognitionNotAvailable;
 import net.gotev.speech.SpeechUtil;
+import net.gotev.speech.TextToSpeechCallback;
 import net.gotev.speech.ui.SpeechProgressView;
 
 import java.util.List;
@@ -31,6 +34,7 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
     private SpeechProgressView progress;
 
     private EditText[] numFields;
+    private int actualField;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,18 +42,17 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
         setContentView(R.layout.activity_main);
 
         Speech.init(this);//Iniciar el recognizer
-        Speech.getInstance().setLocale(new Locale("es", "ES"));//Cambiar idioma a español
-
         numFields=new EditText[4];
         numFields[0]=(EditText)findViewById(R.id.numField1);//La utilizaremos
         numFields[1]=(EditText)findViewById(R.id.numField2);//para rellenarla según
         numFields[2]=(EditText)findViewById(R.id.numField3);// lo escuchado
         numFields[3]=(EditText)findViewById(R.id.numField4);
+        actualField=-1;
 
         progress = (SpeechProgressView) findViewById(R.id.progress);
     }
 
-    public void onEditTextClick(View view){
+    private void startSpeaking(){
         if (Speech.getInstance().isListening()) {
             Speech.getInstance().stopListening();
         } else {
@@ -57,9 +60,7 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
                     new String[]{Manifest.permission.INTERNET, Manifest.permission.RECORD_AUDIO},
                     REQUEST_PERMISSION);
             try {
-                view.setFocusableInTouchMode(true);
-                view.requestFocus();
-                Speech.getInstance().stopTextToSpeech();
+                //Speech.getInstance().stopTextToSpeech();
                 Speech.getInstance().startListening(progress, MainActivity.this);
 
             } catch (SpeechRecognitionNotAvailable exc) {
@@ -69,6 +70,16 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
                 showEnableGoogleVoiceTyping();
             }
         }
+    }
+    public void onEditTextClick(View view){
+        view.setFocusableInTouchMode(true);
+        view.setFocusable(true);
+        view.requestFocus();
+        setActualField(view);
+        //view.clearFocus();
+        view.setFocusableInTouchMode(false);
+        view.setFocusable(false);
+        startSpeaking();
     }
 
     private void showSpeechNotSupportedDialog() {
@@ -124,24 +135,39 @@ public class MainActivity extends AppCompatActivity implements SpeechDelegate{
 
     @Override
     public void onSpeechResult(String result) {
-
         if (result.isEmpty()) {
-            Speech.getInstance().say(getString(R.string.repeat));
-
-        } else {
-            Speech.getInstance().say(result);
-            int i=0;
-            boolean setted=false;
-
-            while(i<numFields.length && !setted) {
-                if(numFields[i].isFocused()) {
-                    setted = true;
-                    numFields[i].setText(result);
-                    numFields[i].setFocusableInTouchMode(false);
-                    numFields[i].clearFocus();
+            Speech.getInstance().say("Repítelo, por favor", new TextToSpeechCallback() {
+                @Override
+                public void onStart() {
                 }
-                else
-                    i++;
+
+                @Override
+                public void onCompleted() {
+                    startSpeaking();
+                }
+
+                @Override
+                public void onError() {
+                    Speech.getInstance().say("Pulsa otra vez");
+                }
+            });
+        } else {
+            Speech.getInstance().say("Campo rellenado");
+            numFields[actualField].setText(result);
+        }
+    }
+
+
+    private void setActualField(View view){
+        int i=0;
+        boolean actual=false;
+        while(i<numFields.length && !actual){
+            if(numFields[i].isFocused()){
+                actual=true;
+                actualField=i;
+            }
+            else{
+                i++;
             }
         }
     }
